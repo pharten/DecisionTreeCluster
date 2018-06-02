@@ -26,7 +26,7 @@ public class Attribute  {
 		this.iValue = iValue;
 	}
 	
-	public Attribute(String cName, Category cValue) {
+	public Attribute(Category cValue) {
 		this.cName = cName;
 		this.cValue = cValue;
 	}

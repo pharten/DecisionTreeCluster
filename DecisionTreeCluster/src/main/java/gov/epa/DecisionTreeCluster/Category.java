@@ -11,4 +11,8 @@ public class Category extends HashSet {
 		this.categoryName = categoryName;
 	}
 
+	public String getCategoryName() {
+		return categoryName;
+	}
+
 }
