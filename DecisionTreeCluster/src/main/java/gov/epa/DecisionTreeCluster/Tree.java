@@ -2,6 +2,7 @@ package gov.epa.DecisionTreeCluster;
 
 import java.io.FileReader;
 import java.util.TreeSet;
+import java.util.Vector;
 
 import com.opencsv.CSVReader;
 
@@ -12,8 +13,10 @@ public class Tree extends TreeSet<Node> {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private String[] header = null;
-//	private TreeSet<Node> treeSet = new TreeSet<Node>();
+	private String[] dataNames = null;
+	private Object[] dataTypes = null;
+	private Object[] record = null;
+	private Vector<Object[]> records = null;
 	
 	public Tree(String filename) {
 		super();
@@ -73,38 +76,54 @@ public class Tree extends TreeSet<Node> {
 	
 	private void buildTreeFromSingleElementNodes(String filename) throws Exception {
 		
-		String[] header = null;
-		
 		CSVReader csvReader = new CSVReader(new FileReader(filename));
 		
 		String[] line = csvReader.readNext();
 		
-		if (line==null) {
-			throw new Exception("First line of "+filename+" is null");
-		} else {
-			header = new String[line.length-2];
-			for (int i=0; i<header.length; i++) header[i] = line[i+2];
-		}
-		this.setHeader(header);
+		if (line==null) throw new Exception("First line of "+filename+" is null");
 		
-		Node node = null;
+		dataNames = new String[line.length];
+		dataTypes = new Object[line.length];
+		
+		for (int i=0; i<dataNames.length; i++) {
+			dataNames[i] = line[i];
+			if (i==0) {				
+				dataTypes[i] = String.class;
+			} else if (i==1) {
+				dataTypes[i] = Double.class;
+			} else {
+				dataTypes[i] = Double.class;
+			}
+		}
+		
 		while ((line=csvReader.readNext())!=null) {
-			node = new Node(this, line);
+			record = new Object[dataNames.length];
+			for (int i=0; i<record.length; i++) {
+				if (dataTypes[i] == Double.class) {				
+					record[i] = Double.valueOf(line[i]);
+				} else if (dataTypes[i] == Integer.class) {
+					record[i] = Integer.valueOf(line[i]);
+				} else {
+					record[i] = line[i].toString();
+				}
+			}
+			Node node = new Node(this, record);
 			this.add(node);
 		}
 		
 	}
 
-	public String[] getHeader() {
-		return header;
-	}
-	
-	public void setHeader(String[] header) {
-		this.header = header;
+	public String[] getDataNames() {
+		return dataNames;
 	}
 
-//	public TreeSet<Node> getTreeSet() {
-//		return treeSet;
-//	}
+	public Object[] getDataTypes() {
+		return dataTypes;
+	}
+
+	public Vector<Object[]> getRecords() {
+		return records;
+	}
+
 
 }

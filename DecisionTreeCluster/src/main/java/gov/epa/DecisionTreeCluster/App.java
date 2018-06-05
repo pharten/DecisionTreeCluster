@@ -13,7 +13,12 @@ public class App
         Tree tree = new Tree("LC50_training_set-2D.csv");
         System.out.println(tree.isEmpty());
         
-        System.out.println(tree.getHeader());
+        String[] dataNames = tree.getDataNames();
+        String total="";
+        for (int i=0; i< dataNames.length-1;i++) total+=dataNames[i]+", ";
+        total+=dataNames[dataNames.length-1]+"\n";
+        
+        System.out.println(total);
         System.out.println(tree.first().toString());
         System.out.println(tree.last().toString());
     }

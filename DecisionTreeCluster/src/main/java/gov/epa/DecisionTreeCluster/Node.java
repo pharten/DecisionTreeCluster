@@ -16,7 +16,6 @@ public class Node implements Comparable<Node> {
 	 *
 	 */
 	private Tree allNodes=null;
-	private Vector<String[]> records=null;
 	private double mean;
 	private double std;
 	private double entropy;
@@ -24,33 +23,28 @@ public class Node implements Comparable<Node> {
 	private Node parent=null;
 	private Node child1=null;
 	private Node child2=null;
-	private Vector<Attribute> attributes;
-	private Vector<Attribute[]> records2;
-	private int splitAttibuteIndex;
-	private Attribute splitAttributeValue;
+	private Vector<Object[]> records = new Vector<Object[]>();
+
+//	private int splitAttibuteIndex;
+//	private Property splitAttributeValue;
 	
 	public Node(Tree allNodes) {
 		super();
 		this.allNodes = allNodes;
 	}
 	
-	public Node(Tree allNodes, Node parent, Vector<String[]> records) {
+	public Node(Tree allNodes, Node parent, Vector<Object[]> records) {
 		super();
 		this.allNodes = allNodes;
-		this.parent = parent;		
+		this.parent = parent;
+		this.records = records;
 	}
 	
-	public Node(Tree allNodes, String[] singleRecord) {
+	public Node(Tree allNodes, Object[] singleRecord) {
 		super();
 		this.allNodes = allNodes;
-		this.records = new Vector<String[]>();
 		records.add(singleRecord);
 	}
-	
-//	@Override
-//	public int compareTo(Node o) {
-//        return order - o.order;
-//	}
 
 	boolean isLeaf() {
 		return (child1==null && child2==null);
@@ -112,12 +106,12 @@ public class Node implements Comparable<Node> {
 		this.child2 = child2;
 	}
 
-	public Vector<Attribute> getAttributes() {
-		return attributes;
+	public Vector<Object[]> getRecords() {
+		return records;
 	}
 
-	public void setAttributes(Vector<Attribute> attributes) {
-		this.attributes = attributes;
+	public void setRecords(Vector<Object[]> records) {
+		this.records = records;
 	}
 
 	public int compareTo(Node o) {
@@ -128,8 +122,10 @@ public class Node implements Comparable<Node> {
 	public String toString() {
 		String total="";
 		for (int i=0; i<records.size(); i++) {
-			String[] record = records.get(i);
-			for (int j=0; j<record.length-1; j++) total+=record[j]+", ";
+			Object[] record = records.get(i);
+			for (int j=0; j<record.length-1; j++) {
+				total += record[j]+", ";
+			}
 			total+=record[record.length-1]+"\n";
 		}
 		return total;
