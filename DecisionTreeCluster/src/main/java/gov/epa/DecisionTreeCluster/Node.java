@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author PHARTEN
  *
  */
-public class Node {
+public class Node implements Comparable<Node> {
 
 	/**
 	 *
@@ -47,7 +47,11 @@ public class Node {
 		records.add(singleRecord);
 	}
 	
-	
+//	@Override
+//	public int compareTo(Node o) {
+//        return order - o.order;
+//	}
+
 	boolean isLeaf() {
 		return (child1==null && child2==null);
 	}
@@ -114,6 +118,21 @@ public class Node {
 
 	public void setAttributes(Vector<Attribute> attributes) {
 		this.attributes = attributes;
+	}
+
+	public int compareTo(Node o) {
+		return (this.hashCode()-o.hashCode());
+	}
+	
+	@Override
+	public String toString() {
+		String total="";
+		for (int i=0; i<records.size(); i++) {
+			String[] record = records.get(i);
+			for (int j=0; j<record.length-1; j++) total+=record[j]+", ";
+			total+=record[record.length-1]+"\n";
+		}
+		return total;
 	}
 
 }
