@@ -15,8 +15,9 @@ public class Tree extends TreeSet<Node> {
 
 	private String[] dataNames = null;
 	private Object[] dataTypes = null;
-	private Object[] record = null;
-	private Vector<Object[]> records = null;
+	private Property[] record = null;
+	private Vector<Property[]> records = null;
+	private Vector<Category> categories = new Vector<Category>();
 	
 	public Tree(String filename) {
 		super();
@@ -25,7 +26,6 @@ public class Tree extends TreeSet<Node> {
 			
 			buildTreeFromSingleElementNodes(filename);
 			
-//			predictionDataStrings = readCsvFile("LC50_prediction_set-2D.csv");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -80,7 +80,10 @@ public class Tree extends TreeSet<Node> {
 		
 		String[] line = csvReader.readNext();
 		
-		if (line==null) throw new Exception("First line of "+filename+" is null");
+		if (line==null) {
+			csvReader.close();
+			throw new Exception("First line of "+filename+" is null");
+		}
 		
 		dataNames = new String[line.length];
 		dataTypes = new Object[line.length];
@@ -88,28 +91,33 @@ public class Tree extends TreeSet<Node> {
 		for (int i=0; i<dataNames.length; i++) {
 			dataNames[i] = line[i];
 			if (i==0) {				
-				dataTypes[i] = String.class;
+				dataTypes[i] = Category.class;
+				categories.add(new Category(dataNames[i]));
 			} else if (i==1) {
-				dataTypes[i] = Double.class;
+				dataTypes[i] = double.class;
 			} else {
-				dataTypes[i] = Double.class;
+				dataTypes[i] = double.class;
 			}
 		}
 		
 		while ((line=csvReader.readNext())!=null) {
-			record = new Object[dataNames.length];
+			record = new Property[dataNames.length];
 			for (int i=0; i<record.length; i++) {
-				if (dataTypes[i] == Double.class) {				
-					record[i] = Double.valueOf(line[i]);
-				} else if (dataTypes[i] == Integer.class) {
-					record[i] = Integer.valueOf(line[i]);
+				if (dataTypes[i] == double.class) {				
+					record[i] = new Property(Double.parseDouble((line[i])));
+				} else if (dataTypes[i] == int.class) {
+					record[i] = new Property(Integer.parseInt((line[i])));
+				} else if (dataTypes[i] == Category.class) {
+					record[i] = new Property(categories, dataNames[i], line[i]);
 				} else {
-					record[i] = line[i].toString();
+					throw new Exception("Property datatype not found");
 				}
 			}
 			Node node = new Node(this, record);
 			this.add(node);
 		}
+		
+		csvReader.close();
 		
 	}
 
@@ -121,7 +129,7 @@ public class Tree extends TreeSet<Node> {
 		return dataTypes;
 	}
 
-	public Vector<Object[]> getRecords() {
+	public Vector<Property[]> getRecords() {
 		return records;
 	}
 

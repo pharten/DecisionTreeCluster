@@ -23,7 +23,7 @@ public class Node implements Comparable<Node> {
 	private Node parent=null;
 	private Node child1=null;
 	private Node child2=null;
-	private Vector<Object[]> records = new Vector<Object[]>();
+	private Vector<Property[]> records = new Vector<Property[]>();
 
 //	private int splitAttibuteIndex;
 //	private Property splitAttributeValue;
@@ -33,14 +33,14 @@ public class Node implements Comparable<Node> {
 		this.allNodes = allNodes;
 	}
 	
-	public Node(Tree allNodes, Node parent, Vector<Object[]> records) {
+	public Node(Tree allNodes, Node parent, Vector<Property[]> records) {
 		super();
 		this.allNodes = allNodes;
 		this.parent = parent;
 		this.records = records;
 	}
 	
-	public Node(Tree allNodes, Object[] singleRecord) {
+	public Node(Tree allNodes, Property[] singleRecord) {
 		super();
 		this.allNodes = allNodes;
 		records.add(singleRecord);
@@ -106,11 +106,11 @@ public class Node implements Comparable<Node> {
 		this.child2 = child2;
 	}
 
-	public Vector<Object[]> getRecords() {
+	public Vector<Property[]> getRecords() {
 		return records;
 	}
 
-	public void setRecords(Vector<Object[]> records) {
+	public void setRecords(Vector<Property[]> records) {
 		this.records = records;
 	}
 
@@ -122,11 +122,28 @@ public class Node implements Comparable<Node> {
 	public String toString() {
 		String total="";
 		for (int i=0; i<records.size(); i++) {
-			Object[] record = records.get(i);
-			for (int j=0; j<record.length-1; j++) {
-				total += record[j]+", ";
+			Property[] record = records.get(i);
+			String endVal = ", ";
+			for (int j=0; j<record.length; j++) {
+				if (j==record.length-1) endVal = "\n";
+				Property property = record[j];
+				Object datatype = property.getDataType();
+				if (datatype==double.class) {
+					total += Double.toString(property.getdValue())+endVal;
+				} else if (datatype==int.class) {
+					total += Integer.toString(property.getiValue())+endVal;
+				} else if (datatype==Category.class) {
+					total += property.getcValue()+endVal;
+				} else {
+					try {
+						throw new Exception("Error: Bad datatype");
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
 			}
-			total+=record[record.length-1]+"\n";
 		}
 		return total;
 	}

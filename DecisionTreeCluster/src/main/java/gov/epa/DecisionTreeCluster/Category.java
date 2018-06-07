@@ -1,18 +1,23 @@
 package gov.epa.DecisionTreeCluster;
 
-import java.util.HashSet;
+import java.util.Vector;
 
-public class Category extends HashSet {
+public class Category {
 	
-	private String categoryName;
+	private String catName;
+	private Vector<String> catValues = new Vector<String>();
 	
-	public Category(String categoryName) {
+	public Category(String catName) {
 		super();
-		this.categoryName = categoryName;
+		this.catName = catName;
 	}
 
-	public String getCategoryName() {
-		return categoryName;
+	public String getCatName() {
+		return catName;
+	}
+
+	public Vector<String> getCatValues() {
+		return catValues;
 	}
 
 }
