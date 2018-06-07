@@ -94,22 +94,26 @@ public class Tree extends TreeSet<Node> {
 				dataTypes[i] = Category.class;
 				categories.add(new Category(dataNames[i]));
 			} else if (i==1) {
-				dataTypes[i] = double.class;
+				dataTypes[i] = Integer.class;
 			} else {
-				dataTypes[i] = double.class;
+				dataTypes[i] = Double.class;
 			}
 		}
 		
 		while ((line=csvReader.readNext())!=null) {
 			record = new Property[dataNames.length];
 			for (int i=0; i<record.length; i++) {
-				if (dataTypes[i] == double.class) {				
-					record[i] = new Property(Double.parseDouble((line[i])));
-				} else if (dataTypes[i] == int.class) {
-					record[i] = new Property(Integer.parseInt((line[i])));
+				if (line[i].equalsIgnoreCase("Null")) {
+					record[i] = new Property();
+				} else if (dataTypes[i] == Double.class) {				
+					record[i] = new Property(Double.parseDouble(line[i]));
+				} else if (dataTypes[i] == Integer.class) {
+					line[i] = line[i].replace('.', '0');
+					record[i] = new Property(Integer.parseInt(line[i]));
 				} else if (dataTypes[i] == Category.class) {
 					record[i] = new Property(categories, dataNames[i], line[i]);
 				} else {
+					csvReader.close();
 					throw new Exception("Property datatype not found");
 				}
 			}

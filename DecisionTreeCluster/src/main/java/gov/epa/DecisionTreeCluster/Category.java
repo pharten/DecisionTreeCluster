@@ -5,11 +5,12 @@ import java.util.Vector;
 public class Category {
 	
 	private String catName;
-	private Vector<String> catValues = new Vector<String>();
+	private Vector<String> catValues = null;
 	
 	public Category(String catName) {
 		super();
 		this.catName = catName;
+		this.catValues = new Vector<String>();
 	}
 
 	public String getCatName() {

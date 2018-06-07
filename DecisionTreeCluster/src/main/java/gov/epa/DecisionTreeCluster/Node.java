@@ -1,5 +1,6 @@
 package gov.epa.DecisionTreeCluster;
 
+import java.lang.reflect.Member;
 import java.util.Vector;
 
 /**
@@ -127,13 +128,14 @@ public class Node implements Comparable<Node> {
 			for (int j=0; j<record.length; j++) {
 				if (j==record.length-1) endVal = "\n";
 				Property property = record[j];
-				Object datatype = property.getDataType();
-				if (datatype==double.class) {
-					total += Double.toString(property.getdValue())+endVal;
-				} else if (datatype==int.class) {
-					total += Integer.toString(property.getiValue())+endVal;
-				} else if (datatype==Category.class) {
-					total += property.getcValue()+endVal;
+				Object member = property.getPropWrap();
+				if (member.getClass()==Double.class) {
+					total += property.getPropWrap().toString()+endVal;
+				} else if (member.getClass()==Integer.class) {
+					total += property.getPropWrap().toString()+endVal;
+				} else if (member.getClass()==String.class) {
+					total += property.getPropWrap()+endVal;
+					String memberName = property.getPropName();
 				} else {
 					try {
 						throw new Exception("Error: Bad datatype");

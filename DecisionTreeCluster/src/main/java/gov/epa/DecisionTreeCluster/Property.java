@@ -15,20 +15,14 @@ public class Property  {
 	/**
 	 * 
 	 */
-	private double dValue;
-	private int iValue;
-	private String cName;
-	private String cValue;
-	private Object datatype;
-
-	public Property(double dValue) {
-		this.dValue = dValue;
-		this.datatype =  double.class;
+	private Object propWrap = null;
+	private String propName = null;
+	
+	public Property() {
 	}
 	
-	public Property(int iValue) {
-		this.iValue = iValue;
-		this.datatype =  int.class;
+	public Property(Object member) {
+		this.propWrap = member;
 	}
 	
 	public Property(Vector<Category> categories, String cName, String cValue) throws Exception {
@@ -46,29 +40,16 @@ public class Property  {
 			throw new Exception("Error: Category "+cName+" not found.");
 		}
 		
-		this.cName = cName;
-		this.cValue = cValue;
-		this.datatype =  Category.class;
+		this.propName = cName;
+		this.propWrap = cValue;
 	}
 	
-	public double getdValue() {
-		return dValue;
+	public Object getPropWrap() {
+		return propWrap;
 	}
 
-	public int getiValue() {
-		return iValue;
-	}
-
-	public String getcName() {
-		return cName;
-	}
-
-	public String getcValue() {
-		return cValue;
-	}
-
-	public Object getDataType() {
-		return datatype;
+	public String getPropName() {
+		return propName;
 	}
 
 }
