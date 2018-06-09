@@ -24,7 +24,9 @@ public class Tree extends TreeSet<Node> {
 
 		try {
 			
-			buildTreeFromSingleElementNodes(filename);
+			buildTreeFromSingleRecordNodes(filename);
+			
+//			normalizeAllProperties();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -74,7 +76,7 @@ public class Tree extends TreeSet<Node> {
 //
 //	}
 	
-	private void buildTreeFromSingleElementNodes(String filename) throws Exception {
+	private void buildTreeFromSingleRecordNodes(String filename) throws Exception {
 		
 		CSVReader csvReader = new CSVReader(new FileReader(filename));
 		
@@ -123,6 +125,17 @@ public class Tree extends TreeSet<Node> {
 		
 		csvReader.close();
 		
+	}
+	
+	private void normalizeAllProperties() throws Exception {
+
+		Node node = null;
+		while ((node=this.iterator().next())!=null) {
+			Property[] singleRecord = node.getRecords().get(0);
+			for (int i=0;i<singleRecord.length;i++) {
+				
+			}
+		}
 	}
 
 	public String[] getDataNames() {
