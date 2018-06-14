@@ -41,10 +41,34 @@ public class Node implements Comparable<Node> {
 		this.records = records;
 	}
 	
+	public Node(Tree allNodes, Node child1, Node child2) {
+		super();
+		this.allNodes = allNodes;
+		this.records.clear();
+		Vector<Property[]> records1 = child1.getRecords();
+		Vector<Property[]> records2 = child2.getRecords();
+		this.records.addAll(records1);
+		this.records.addAll(records2);
+		double wght1 = ((double)records1.size())/records.size();
+		double wght2 = ((double)records2.size())/records.size();
+		
+		// toxicity is calculated as a weighed sum of toxicity's of clusters
+		this.mean = wght1*child1.getMean()+wght2*child2.getMean();
+		
+		// determine if entropy should be recalculated as a weighted sum of entropies, instead
+		this.entropy = -wght1*Math.log(wght1)-wght2*Math.log(wght2);
+//		calculateEntropy();
+//		calculateMeanToxicityAndStd();
+	}
+	
 	public Node(Tree allNodes, Property[] singleRecord) {
 		super();
 		this.allNodes = allNodes;
-		records.add(singleRecord);
+		this.entropy = 0.0;
+		this.mean = ((Double)singleRecord[1].getPropWrap()).doubleValue();
+		this.std = 0.0;
+		this.records.clear();
+		this.records.add(singleRecord);
 	}
 
 	boolean isLeaf() {
@@ -55,24 +79,12 @@ public class Node implements Comparable<Node> {
 		return mean;
 	}
 
-	public void setMean(double mean) {
-		this.mean = mean;
-	}
-
 	public double getStd() {
 		return std;
 	}
 
-	public void setStd(double std) {
-		this.std = std;
-	}
-
 	public double getEntropy() {
 		return entropy;
-	}
-
-	public void setEntropy(double entropy) {
-		this.entropy = entropy;
 	}
 
 	public double getWeight() {
@@ -87,32 +99,16 @@ public class Node implements Comparable<Node> {
 		return parent;
 	}
 
-	public void setParent(Node parent) {
-		this.parent = parent;
-	}
-
 	public Node getChild1() {
 		return child1;
-	}
-
-	public void setChild1(Node child1) {
-		this.child1 = child1;
 	}
 
 	public Node getChild2() {
 		return child2;
 	}
 
-	public void setChild2(Node child2) {
-		this.child2 = child2;
-	}
-
 	public Vector<Property[]> getRecords() {
 		return records;
-	}
-
-	public void setRecords(Vector<Property[]> records) {
-		this.records = records;
 	}
 
 	public int compareTo(Node o) {
