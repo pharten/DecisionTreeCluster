@@ -19,7 +19,7 @@ public class ToxComp implements Comparator<Node>, Serializable {
 	}
 
 	public int compare(Node node1, Node node2) {
-		double diff = node1.getMean()-node2.getMean();
+		double diff = node1.getToxicity()-node2.getToxicity();
 		if (diff < 0.0) {
 			return -1;
 		} else if (diff > 0.0) {

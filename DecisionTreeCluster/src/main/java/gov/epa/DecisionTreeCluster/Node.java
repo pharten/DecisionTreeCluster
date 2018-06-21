@@ -17,10 +17,12 @@ public class Node implements Comparable<Node> {
 	 *
 	 */
 	private Tree allNodes=null;
-	private double mean;
+	private double toxicity;
+	private double toxMax;
+	private double toxMin;
+	private double toxInc;
 	private double std;
 	private double entropy;
-	private double weight;
 	private Node parent=null;
 	private Node child1=null;
 	private Node child2=null;
@@ -41,42 +43,81 @@ public class Node implements Comparable<Node> {
 		this.records = records;
 	}
 	
-	public Node(Tree allNodes, Node child1, Node child2) {
+	public Node(double toxInc, Node child1, Node child2) {
 		super();
-		this.allNodes = allNodes;
+		
 		this.records.clear();
 		Vector<Property[]> records1 = child1.getRecords();
 		Vector<Property[]> records2 = child2.getRecords();
 		this.records.addAll(records1);
 		this.records.addAll(records2);
-		double wght1 = ((double)records1.size())/records.size();
-		double wght2 = ((double)records2.size())/records.size();
 		
-		// toxicity is calculated as a weighed sum of toxicity's of clusters
-		this.mean = wght1*child1.getMean()+wght2*child2.getMean();
+		this.toxInc = toxInc;
+		this.toxMin = (child1.toxMax<child2.toxMin ? child1.toxMin : child2.toxMin);
+		this.toxMax = (child1.toxMax>child2.toxMax ? child1.toxMax : child2.toxMax);
 		
-		// determine if entropy should be recalculated as a weighted sum of entropies, instead
-		this.entropy = -wght1*Math.log(wght1)-wght2*Math.log(wght2);
-//		calculateEntropy();
-//		calculateMeanToxicityAndStd();
+		// entropy and toxicity are calculated from the probability distribution
+		calculateEntropyToxicity(getProbDist(toxMin, toxMax, toxInc));
+
 	}
 	
 	public Node(Tree allNodes, Property[] singleRecord) {
 		super();
 		this.allNodes = allNodes;
 		this.entropy = 0.0;
-		this.mean = ((Double)singleRecord[1].getPropWrap()).doubleValue();
+		this.toxicity = ((Double)singleRecord[1].getPropWrap()).doubleValue();
+		this.toxMax = this.toxicity;
+		this.toxMin = this.toxicity;
+		this.toxInc = 0.0;
 		this.std = 0.0;
 		this.records.clear();
 		this.records.add(singleRecord);
+	}
+	
+	private double[] getProbDist(double toxMin, double toxMax, double toxInc) {
+		int index = 0;
+		double tox;
+		int maxIndex = (int) ((toxMax-toxMin)/toxInc);
+		double[] probDist = new double[maxIndex+1];
+		double probInc = 1.0/records.size();
+
+		for (int i=0; i<records.size(); i++) {
+			tox = ((Double)(records.get(i)[1].getPropWrap())).doubleValue();
+			index = (int) ((tox-toxMin)/toxInc);
+			probDist[index]+=probInc;
+		}
+		
+		return probDist;
+	}
+	
+	private void calculateEntropyToxicity(double probDist[]) {
+		double prob = 0;
+		double entropy = 0;
+		double toxicity = 0;
+		
+		for (int i=0; i<probDist.length; i++) {
+			prob = probDist[i];
+			if (prob > 0.0) {
+				toxicity += prob * (toxMin+i*toxInc);
+				entropy -= prob * Math.log(prob);
+			}
+		}
+		this.toxicity = toxicity;
+		this.entropy = (entropy < 2.0e-16 ? 0.0: entropy);  // take care of round-off error
+		
+		return;
 	}
 
 	boolean isLeaf() {
 		return (child1==null && child2==null);
 	}
 
-	public double getMean() {
-		return mean;
+	public double getToxicity() {
+		return toxicity;
+	}
+
+	public double getToxInc() {
+		return toxInc;
 	}
 
 	public double getStd() {
@@ -85,14 +126,6 @@ public class Node implements Comparable<Node> {
 
 	public double getEntropy() {
 		return entropy;
-	}
-
-	public double getWeight() {
-		return weight;
-	}
-
-	public void setWeight(double weight) {
-		this.weight = weight;
 	}
 
 	public Node getParent() {

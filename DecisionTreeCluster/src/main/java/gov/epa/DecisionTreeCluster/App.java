@@ -18,7 +18,7 @@ public class App
         Iterator<Node> iter = tree.iterator();
         while (iter.hasNext()) {
         	Node node = iter.next();
-        	System.out.println(node.getMean()+", "+node.getEntropy()+", "+node.getRecords().size());
+        	System.out.println(node.getToxicity()+", "+node.getToxInc()+", "+node.getEntropy()+", "+node.getRecords().size());
         }
 //        String[] dataNames = tree.getDataNames();
 //        String total="";

@@ -33,20 +33,24 @@ public class Tree extends TreeSet<Node> {
 			// cluster nodes in a loop
 			System.out.println(this.size());
 			
-			clusterNodes(this.size()/2);
+			clusterNodes();
 			System.out.println(this.size());
 			
-			clusterNodes(this.size()/2);
+			clusterNodes();
 			System.out.println(this.size());
 			
-			clusterNodes(this.size()/2);
+			
+			clusterNodes();
+			System.out.println(this.size());
+
+			clusterNodes();
 			System.out.println(this.size());
 			
-			clusterNodes(this.size()/2);
+			clusterNodes();
 			System.out.println(this.size());
 			
-			clusterNodes(this.size()/2);
-			System.out.println(this.size());
+//			clusterNodes(this.size()/2);
+//			System.out.println(this.size());
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -149,45 +153,59 @@ public class Tree extends TreeSet<Node> {
 		
 	}
 	
-	private void clusterNodes(int ntimes) throws Exception {
+	private void clusterNodes() throws Exception {
 		double thisToxicity, prevToxicity;
-		double toxDiff, minToxDiff;
-		Node thisNode, prevNode, node1, node2;
+		double toxDiff;
+		Node thisNode, prevNode;
 
-		for (int i=0; i<ntimes; i++) {
+		int startSize = this.size();
+		
+		double minTox = this.first().getToxicity();
+		double maxTox = this.last().getToxicity();
+		double toxInc = (maxTox-minTox)/startSize;
+		System.out.println(maxTox+", "+minTox+", "+toxInc);
+		
+		Vector<Node> removeNodes = new Vector<Node>();
+		Vector<Node> parentNodes = new Vector<Node>();
+		
+		do {
+			
+			startSize = this.size();
 			
 			if (this.size()<2) break;
 
 			Iterator<Node> iter = this.iterator();
-			node1 = iter.next();
-			prevToxicity = node1.getMean();
-			node2 = iter.next();
-			thisToxicity = node2.getMean();
-			minToxDiff = node2.getMean() - node1.getMean();
 
-			prevNode = node2;
-			prevToxicity = thisToxicity;
+			prevNode = iter.next();
+			prevToxicity = prevNode.getToxicity();
 
 			while (iter.hasNext()) {
+
 				thisNode = iter.next();
-				thisToxicity = thisNode.getMean();
+				thisToxicity = thisNode.getToxicity();
 				toxDiff = thisToxicity - prevToxicity;
-				if (toxDiff < minToxDiff) {
-					minToxDiff = toxDiff;
-					node1 = prevNode;
-					node2 = thisNode;
-				}
+				if (toxDiff < toxInc) {
+					parentNodes.add(new Node(toxInc, prevNode, thisNode));
+					removeNodes.add(prevNode);
+					removeNodes.add(thisNode);
+					if (iter.hasNext()) {
+						thisNode = iter.next();
+						thisToxicity = thisNode.getToxicity();
+					} else {
+						break;
+					}
+				} 
 				prevNode = thisNode;
 				prevToxicity = thisToxicity;
 			}
+			
+			this.removeAll(removeNodes);
+			this.addAll(parentNodes);
+			removeNodes.clear();
+			parentNodes.clear();
 
-			Node parentNode = new Node(this, node1, node2);
-			this.remove(node1);
-			this.remove(node2);
-			this.add(parentNode);
-
-		}
-	
+		} while (startSize != this.size());
+		
 		return;
 	}
 
