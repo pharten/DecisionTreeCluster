@@ -173,16 +173,23 @@ public class Tree extends TreeSet<Node> {
 				thisToxicity = thisNode.getToxicity();
 				toxDiff = thisToxicity-prevToxicity;
 				if (toxDiff < 0.0) toxDiff = -toxDiff;  // take absolute value
-				if (toxDiff < toxInc) {
+				if (toxDiff < toxInc) { // add two Nodes together
 					prevNode.addIn(toxInc, thisNode);
 					prevToxicity = prevNode.getToxicity();
 					iter.remove();  // remove thisNode at this location
 				} else {
+					if (prevNode.getToxInc() < toxInc) {
+						prevNode.addIn(toxInc, null); // update when necessary
+					}
 					prevNode = thisNode;
 					prevToxicity = thisToxicity;
 				}
 			}
-
+			
+			if (prevNode.getToxInc() < toxInc) {
+				prevNode.addIn(toxInc, null); // update when necessary
+			}
+			
 		} while (startSize != this.size());
 		
 		return;

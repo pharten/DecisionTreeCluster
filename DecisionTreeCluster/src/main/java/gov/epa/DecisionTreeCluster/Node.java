@@ -79,11 +79,15 @@ public class Node implements Comparable<Node> {
 	
 	public void addIn(double toxInc, Node otherNode) {
 		
-		this.records.addAll(otherNode.records);
-		
 		this.toxInc = toxInc;
-		if (otherNode.toxMin<this.toxMin) this.toxMin = otherNode.toxMin;
-		if (otherNode.toxMax>this.toxMax) this.toxMax = otherNode.toxMax;
+		
+		if (otherNode != null) {
+			this.records.addAll(otherNode.records);
+			if (otherNode.toxMin<this.toxMin) this.toxMin = otherNode.toxMin;
+			if (otherNode.toxMax>this.toxMax) this.toxMax = otherNode.toxMax;
+		} else {
+			// just (re)calculate entropy
+		}
 		
 		// entropy (and toxicity) are calculated from the probability distribution
 		calculateEntropy(getProbDist(toxMin, toxMax, toxInc));
