@@ -46,12 +46,6 @@ public class Tree extends TreeSet<Node> {
 			clusterNodes();
 			System.out.println(this.size());
 			
-			clusterNodes();
-			System.out.println(this.size());
-			
-//			clusterNodes(this.size()/2);
-//			System.out.println(this.size());
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -165,17 +159,11 @@ public class Tree extends TreeSet<Node> {
 		double toxInc = (maxTox-minTox)/startSize;
 		System.out.println(maxTox+", "+minTox+", "+toxInc);
 		
-		Vector<Node> removeNodes = new Vector<Node>();
-		Vector<Node> parentNodes = new Vector<Node>();
-		
 		do {
-			
 			startSize = this.size();
-			
-			if (this.size()<2) break;
+			if (startSize<2) break;
 
 			Iterator<Node> iter = this.iterator();
-
 			prevNode = iter.next();
 			prevToxicity = prevNode.getToxicity();
 
@@ -183,26 +171,17 @@ public class Tree extends TreeSet<Node> {
 
 				thisNode = iter.next();
 				thisToxicity = thisNode.getToxicity();
-				toxDiff = thisToxicity - prevToxicity;
+				toxDiff = thisToxicity-prevToxicity;
+				if (toxDiff < 0.0) toxDiff = -toxDiff;  // take absolute value
 				if (toxDiff < toxInc) {
-					parentNodes.add(new Node(toxInc, prevNode, thisNode));
-					removeNodes.add(prevNode);
-					removeNodes.add(thisNode);
-					if (iter.hasNext()) {
-						thisNode = iter.next();
-						thisToxicity = thisNode.getToxicity();
-					} else {
-						break;
-					}
-				} 
-				prevNode = thisNode;
-				prevToxicity = thisToxicity;
+					prevNode.addIn(toxInc, thisNode);
+					prevToxicity = prevNode.getToxicity();
+					iter.remove();  // remove thisNode at this location
+				} else {
+					prevNode = thisNode;
+					prevToxicity = thisToxicity;
+				}
 			}
-			
-			this.removeAll(removeNodes);
-			this.addAll(parentNodes);
-			removeNodes.clear();
-			parentNodes.clear();
 
 		} while (startSize != this.size());
 		
