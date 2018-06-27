@@ -68,7 +68,7 @@ public class Node implements Comparable<Node> {
 		this.child1 = null;
 		this.child2 = null;
 		this.entropy = 0.0;
-		this.toxicity = ((Double)singleRecord[1].getPropWrap()).doubleValue();
+		this.toxicity = (Double)singleRecord[1].getPropWrap();
 		this.toxMax = this.toxicity;
 		this.toxMin = this.toxicity;
 		this.toxInc = 0.0;
@@ -102,7 +102,7 @@ public class Node implements Comparable<Node> {
 		double probInc = 1.0/records.size();
 
 		for (int i=0; i<records.size(); i++) {
-			tox = ((Double)(records.get(i)[1].getPropWrap())).doubleValue();
+			tox = (Double) ((records.get(i))[1].getPropWrap());
 			sumTox += tox;
 			index = (int) ((tox-toxMin)/toxInc);
 			probDist[index]+=probInc;

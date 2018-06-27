@@ -1,7 +1,7 @@
 package gov.epa.DecisionTreeCluster;
 
 import java.io.FileReader;
-import java.util.Comparator;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -17,6 +17,7 @@ public class Tree extends TreeSet<Node> {
 
 	private String[] dataNames = null;
 	private Object[] dataTypes = null;
+	private double[] stddev = null;
 	private Property[] record = null;
 	private Vector<Property[]> records = null;
 	private Vector<Category> categories = new Vector<Category>();
@@ -28,23 +29,16 @@ public class Tree extends TreeSet<Node> {
 		try {
 			
 			// sorting Nodes by Toxicity is done while creating this Tree
-			createTreeOfSingleRecordNodes(filename);
+			createTree(filename);
 			
 			// cluster nodes in a loop
 			System.out.println(this.size());
 			
-			clusterNodes();
-			System.out.println(this.size());
-			
-			clusterNodes();
-			System.out.println(this.size());
-			
-			
-			clusterNodes();
-			System.out.println(this.size());
-
-			clusterNodes();
-			System.out.println(this.size());
+			int i = 0;
+			while (this.size()>2 && i++<2) {
+				clusterNodes();
+				System.out.println(this.size());
+			}
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -54,59 +48,32 @@ public class Tree extends TreeSet<Node> {
 		return;
 		
 	}
+	
+	private void createTree(String filename) throws Exception {
+		
+		records = readCvsFile(filename);
+		
+		createTreeOfSingleRecordNodes(records);
+		
+		stddev = getStandardDeviations(records);
+		
+		normalizeTree(stddev);
+		
+	}
 
-//	private String[] generateHeader(Vector<String[]> trainingData) {
-//		
-//		String[] firstRecord = trainingData.firstElement();
-//		String[] header = new String[firstRecord.length-2];
-//		for (int i=0; i<header.length; i++) header[i] = firstRecord[i+2];
-//		
-//		return header;
-//		
-//	}
-	
-//	private Vector<String[]> readCsvFile(String filename) throws Exception {
-//
-//		CSVReader csvReader = null;
-//		Vector<String[]> records = new Vector<String[]>();
-//		
-//		try	{
-//			
-//			/* create a new CSVReader for the fileName */
-//			csvReader = new CSVReader(new FileReader(filename));
-//			
-//			String[] line = null;
-//			/* Loop over lines in the csv file */
-//			while ((line = csvReader.readNext())!=null) {
-//				
-//				records.add(line);
-//				
-//			}
-//			
-//			/* Close the writer. */
-//			csvReader.close();
-//			
-//		} catch(Exception ex)	{
-//				
-//			throw ex;
-//			
-//		}
-//		
-//		return records;
-//
-//	}
-	
-	private void createTreeOfSingleRecordNodes(String filename) throws Exception {
+	private Vector<Property[]> readCvsFile(String filename) throws IOException, Exception {
+		double value;
+		int intval;
 		
 		CSVReader csvReader = new CSVReader(new FileReader(filename));
-		
+
 		String[] line = csvReader.readNext();
 		
 		if (line==null) {
 			csvReader.close();
 			throw new Exception("First line of "+filename+" is null");
 		}
-		
+
 		dataNames = new String[line.length];
 		dataTypes = new Object[line.length];
 		
@@ -122,16 +89,20 @@ public class Tree extends TreeSet<Node> {
 			}
 		}
 		
+		records = new Vector<Property[]>();
+		
 		while ((line=csvReader.readNext())!=null) {
 			record = new Property[dataNames.length];
 			for (int i=0; i<record.length; i++) {
 				if (line[i].equalsIgnoreCase("Null")) {
 					record[i] = new Property();
-				} else if (dataTypes[i] == Double.class) {				
-					record[i] = new Property(Double.parseDouble(line[i]));
+				} else if (dataTypes[i] == Double.class) {
+					value = Double.parseDouble(line[i]);
+					record[i] = new Property(Double.valueOf(value));
 				} else if (dataTypes[i] == Integer.class) {
 					line[i] = line[i].replace('.', '0');
-					record[i] = new Property(Integer.parseInt(line[i]));
+					intval = Integer.parseInt(line[i]);
+					record[i] = new Property(Integer.valueOf(intval));
 				} else if (dataTypes[i] == Category.class) {
 					record[i] = new Property(categories, dataNames[i], line[i]);
 				} else {
@@ -139,11 +110,101 @@ public class Tree extends TreeSet<Node> {
 					throw new Exception("Property datatype not found");
 				}
 			}
-			Node node = new Node(this, record);
-			this.add(node);
+			records.add(record);
 		}
 		
 		csvReader.close();
+		
+		return records;
+	}
+	
+	private void createTreeOfSingleRecordNodes(Vector<Property[]> records) {
+		for (int i=0; i<records.size(); i++) {
+			this.add(new Node(this, this.records.get(i)));
+		}
+	}
+
+	private double[] getStandardDeviations(Vector<Property[]> records) throws Exception {
+		
+		Property[] record = records.firstElement();
+		int length = record.length;
+		double value;
+		
+		double[] avg = new double[length];
+		double[] avgsq = new double[length];
+		double[] count = new double[length];
+		
+		for (int j=0; j<records.size(); j++) {
+			record = records.get(j);
+			for (int i=0; i<avg.length; i++) {
+				if (dataTypes[i] == Double.class) {
+					value = (Double) record[i].getPropWrap();
+					avg[i] += value;
+					avgsq[i] += value*value;
+					count[i] += 1.0;
+				} else if (dataTypes[i] == Integer.class) {
+					value = (Integer) record[i].getPropWrap();
+					avg[i] += value;
+					avgsq[i] += value*value;
+					count[i] += 1.0;
+				} else if (dataTypes[i] == Category.class) {
+					// do nothing
+				} else {
+					throw new Exception("Property datatype not found");
+				}
+			}
+		}
+		
+		// calculate standard deviations
+		double[] stddev = new double[length];
+		for (int i=0; i<stddev.length; i++) {
+			stddev[i]=0.0;
+			if (dataTypes[i] == Double.class || dataTypes[i] == Integer.class) {
+				if (count[i]>1.0) {
+					avg[i] = avg[i]/count[i];
+					avgsq[i] = avgsq[i]/count[i];
+					stddev[i] = Math.sqrt(avgsq[i]-avg[i]*avg[i]);
+				}
+			} else if (dataTypes[i] == Category.class) {
+				// do nothing
+			} else {
+				throw new Exception("Property datatype not found");
+			}
+		}
+		return stddev;
+		
+	}
+	
+	private void normalizeTree(double[] stddev) {
+		Node node;
+		double value;
+		int intval;
+		
+		if (this.size()<2) return;
+
+		Iterator<Node> iter = this.iterator();
+		while (iter.hasNext()) {
+			node = iter.next();
+			records = node.getRecords();
+			
+			// there should not be more than 1 record for each node at this point;
+			for (int i=0; i<records.size(); i++) {
+				record = records.get(i);
+				for (int j=2; j<stddev.length; j++) {
+					if (stddev[j] != 0.0) {
+						if (dataTypes[j]==Double.class) {
+							value = (Double) record[j].getPropWrap();
+							value = value/stddev[j];
+							record[j].setPropWrap(Double.valueOf(value));
+						} else if (dataTypes[j]==Integer.class) {
+							intval = (int)((Integer)record[j].getPropWrap()/stddev[i]);
+							record[j].setPropWrap(Integer.valueOf(intval));
+						}
+					}
+				}
+			}
+			
+		}
 		
 	}
 	
@@ -194,7 +255,7 @@ public class Tree extends TreeSet<Node> {
 		
 		return;
 	}
-
+	
 	public String[] getDataNames() {
 		return dataNames;
 	}

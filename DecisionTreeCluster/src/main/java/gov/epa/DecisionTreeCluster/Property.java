@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author PHARTEN
  *
  */
-public class Property  {
+public class Property {
 
 	/**
 	 * 
@@ -46,6 +46,10 @@ public class Property  {
 	
 	public Object getPropWrap() {
 		return propWrap;
+	}
+	
+	public void setPropWrap(Object object) {
+		propWrap = object;
 	}
 
 	public String getPropName() {
