@@ -27,6 +27,8 @@ public class Node implements Comparable<Node> {
 	private Node child1=null;
 	private Node child2=null;
 	private Vector<Property[]> records = new Vector<Property[]>();
+	private int bestPropertyIndex = 0;  // best property to split on;
+	private int bestRecordIndex = 0; // best record to split on;
 
 //	private int splitAttibuteIndex;
 //	private Property splitAttributeValue;
@@ -136,13 +138,13 @@ public class Node implements Comparable<Node> {
 		return probDist;
 	}
 
-	private double getToxicity(Property[] record) {
+	private static double getToxicity(Property[] record) {
 		double tox;
 		tox = (Double) record[1].getPropWrap();
 		return tox;
 	}
 	
-	private double calculateEntropy(double probDist[]) {
+	private static double calculateEntropy(double probDist[]) {
 		double prob = 0;
 		double entropy = 0;
 		
@@ -203,6 +205,22 @@ public class Node implements Comparable<Node> {
 
 	public Vector<Property[]> getRecords() {
 		return records;
+	}
+
+	public int getBestPropertyIndex() {
+		return bestPropertyIndex;
+	}
+	
+	public void setBestPropertyIndex(int bestPropertyIndex) {
+		this.bestPropertyIndex = bestPropertyIndex;
+	}
+
+	public int getBestRecordIndex() {
+		return bestRecordIndex;
+	}
+
+	public void setBestRecordIndex(int bestRecordIndex) {
+		this.bestRecordIndex = bestRecordIndex;
 	}
 
 	public int compareTo(Node o) {

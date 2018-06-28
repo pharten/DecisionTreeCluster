@@ -41,6 +41,18 @@ public class Tree extends TreeSet<Node> {
 			entropyReduction = splitTree(parentNode.getChild2());
 			System.out.println("Entropy reduction by split= "+entropyReduction);
 			
+			entropyReduction = splitTree(parentNode.getChild1().getChild1());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
+			entropyReduction = splitTree(parentNode.getChild1().getChild2());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
+			entropyReduction = splitTree(parentNode.getChild2().getChild1());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
+			entropyReduction = splitTree(parentNode.getChild2().getChild2());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
 			Iterator<Node> iter = this.iterator();
 			while(iter.hasNext()) {
 				Node node = iter.next();
@@ -166,39 +178,44 @@ public class Tree extends TreeSet<Node> {
 		Vector<Property[]> recordsL = null, recordsR = null;
 		double avgEntropy, leastEntropy, parentEntropy;
 		int bestPropertyIndex = 2;
+		int bestRecordIndex = 0;
 		
 		child1Best = null;
 		child2Best = null;
 		parentEntropy = parentNode.getEntropy();
 		leastEntropy = parentEntropy;
 		Vector<Property[]> records = parentNode.getRecords();
-		record1 = records.firstElement();
 		
-		for (int j=1; j<record1.length; j++) {
-			recordsL = new Vector<Property[]>();
-			recordsR = new Vector<Property[]>();
+		for (int j=2; j<records.firstElement().length; j++) {
+
 			if (dataTypes[j]==Double.class) {
-				value1 = (Double)record1[j].getPropWrap();
-				for (int i=0; i<records.size(); i++) {
-					record2 = records.get(i);
-					value2 = (Double)record2[j].getPropWrap();
-					if (value2<=value1) {
-						recordsL.add(record2.clone());
-					} else {
-						recordsR.add(record2.clone());
+				for (int k=0; k<records.size(); k++) {
+					record1 = records.get(k);
+					value1 = (Double)record1[j].getPropWrap();
+					recordsL = new Vector<Property[]>();
+					recordsR = new Vector<Property[]>();
+					for (int i=0; i<records.size(); i++) {
+						record2 = records.get(i);
+						value2 = (Double)record2[j].getPropWrap();
+						if (value2<=value1) {
+							recordsL.add(record2);
+						} else {
+							recordsR.add(record2);
+						}
+					}
+					child1 = new Node(this, parentNode, recordsL);
+					child2 = new Node(this, parentNode, recordsR);
+					entropy1 = child1.getEntropy();
+					entropy2 = child2.getEntropy();
+					avgEntropy = (recordsL.size()*entropy1+recordsR.size()*entropy2)/records.size();
+					if (avgEntropy<leastEntropy) {
+						leastEntropy = avgEntropy;
+						child1Best = child1;
+						child2Best = child2;
+						bestPropertyIndex = j;
+						bestRecordIndex = k;
 					}
 				}
-			}
-			child1 = new Node(this, parentNode, recordsL);
-			child2 = new Node(this, parentNode, recordsR);
-			entropy1 = child1.getEntropy();
-			entropy2 = child2.getEntropy();
-			avgEntropy = (recordsL.size()*entropy1+recordsR.size()*entropy2)/records.size();
-			if (avgEntropy<leastEntropy) {
-				leastEntropy = avgEntropy;
-				child1Best = child1;
-				child2Best = child2;
-				bestPropertyIndex = j;
 			}
 
 		}
@@ -209,6 +226,8 @@ public class Tree extends TreeSet<Node> {
 		
 		parentNode.setChild1(child1Best);
 		parentNode.setChild2(child2Best);
+		parentNode.setBestPropertyIndex(bestPropertyIndex);
+		parentNode.setBestRecordIndex(bestRecordIndex);
 		
 		return bestPropertyIndex;
 		
