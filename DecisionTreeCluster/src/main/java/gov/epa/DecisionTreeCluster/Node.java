@@ -18,10 +18,10 @@ public class Node implements Comparable<Node> {
 	 */
 	private Tree allNodes=null;
 	private double toxicity;
-	private double toxMax;
-	private double toxMin;
+	private double toxMax=0.0;
+	private double toxMin=Double.MAX_VALUE;
 	private double toxInc;
-	private double std;
+	private double[] toxPDF = null;
 	private double entropy;
 	private Node parent=null;
 	private Node child1=null;
@@ -41,6 +41,21 @@ public class Node implements Comparable<Node> {
 		this.allNodes = allNodes;
 		this.parent = parent;
 		this.records = records;
+		
+		if (parent==null) {
+			findToxMinMaxInc(records, 100);
+		} else {
+			this.toxMin = parent.getToxMin();
+			this.toxMax = parent.getToxMax();
+			this.toxInc = parent.getToxInc();
+		}
+
+		toxPDF = getProbDist(toxMin, toxMax, toxInc);
+		
+		// entropy (and toxicity) are calculated from the probability distribution
+		this.entropy = calculateEntropy(toxPDF);
+		
+		return;
 	}
 	
 	public Node(double toxInc, Node child1, Node child2) {
@@ -58,7 +73,7 @@ public class Node implements Comparable<Node> {
 		this.toxMax = (child1.toxMax>child2.toxMax ? child1.toxMax : child2.toxMax);
 		
 		// entropy (and toxicity) are calculated from the probability distribution
-		calculateEntropy(getProbDist(toxMin, toxMax, toxInc));
+		this.entropy = calculateEntropy(getProbDist(toxMin, toxMax, toxInc));
 
 	}
 	
@@ -72,7 +87,6 @@ public class Node implements Comparable<Node> {
 		this.toxMax = this.toxicity;
 		this.toxMin = this.toxicity;
 		this.toxInc = 0.0;
-		this.std = 0.0;
 		this.records.clear();
 		this.records.add(singleRecord);
 	}
@@ -90,29 +104,45 @@ public class Node implements Comparable<Node> {
 		}
 		
 		// entropy (and toxicity) are calculated from the probability distribution
-		calculateEntropy(getProbDist(toxMin, toxMax, toxInc));
+		this.entropy = calculateEntropy(getProbDist(toxMin, toxMax, toxInc));
 
+	}
+	
+	private void findToxMinMaxInc(Vector<Property[]> records, int ninc) {
+		double tox;
+		for (int i=0; i<records.size(); i++) {
+			tox = getToxicity(records.get(i));
+			if (tox > toxMax) toxMax = tox;
+			if (tox < toxMin) toxMin = tox;
+		}
+		toxInc = (toxMax-toxMin)/ninc;
 	}
 	
 	private double[] getProbDist(double toxMin, double toxMax, double toxInc) {
 		int index = 0;
-		double tox, sumTox=0.0;
+		double tox, avgTox=0.0;
 		int maxIndex = (int) ((toxMax-toxMin)/toxInc);
 		double[] probDist = new double[maxIndex+1];
 		double probInc = 1.0/records.size();
 
 		for (int i=0; i<records.size(); i++) {
-			tox = (Double) ((records.get(i))[1].getPropWrap());
-			sumTox += tox;
+			tox = getToxicity(records.get(i));
+			avgTox += tox;
 			index = (int) ((tox-toxMin)/toxInc);
 			probDist[index]+=probInc;
 		}
-		this.toxicity = sumTox/records.size(); // set toxicity to avgTox;
+		this.toxicity = avgTox/records.size(); // set toxicity to avgTox;
 		
 		return probDist;
 	}
+
+	private double getToxicity(Property[] record) {
+		double tox;
+		tox = (Double) record[1].getPropWrap();
+		return tox;
+	}
 	
-	private void calculateEntropy(double probDist[]) {
+	private double calculateEntropy(double probDist[]) {
 		double prob = 0;
 		double entropy = 0;
 		
@@ -122,9 +152,9 @@ public class Node implements Comparable<Node> {
 				entropy -= prob * Math.log(prob);
 			}
 		}
-		this.entropy = (entropy < 3.0e-16 ? 0.0: entropy);  // take care of round-off error
+		if (entropy < 3.0e-16 ) entropy = 0.0;  // take care of round-off error
 		
-		return;
+		return entropy;
 	}
 
 	boolean isLeaf() {
@@ -139,8 +169,12 @@ public class Node implements Comparable<Node> {
 		return toxInc;
 	}
 
-	public double getStd() {
-		return std;
+	public double getToxMax() {
+		return toxMax;
+	}
+
+	public double getToxMin() {
+		return toxMin;
 	}
 
 	public double getEntropy() {
@@ -154,9 +188,17 @@ public class Node implements Comparable<Node> {
 	public Node getChild1() {
 		return child1;
 	}
+	
+	public void setChild1(Node child1) {
+		this.child1 = child1;
+	}
 
 	public Node getChild2() {
 		return child2;
+	}
+
+	public void setChild2(Node child2) {
+		this.child2 = child2;
 	}
 
 	public Vector<Property[]> getRecords() {

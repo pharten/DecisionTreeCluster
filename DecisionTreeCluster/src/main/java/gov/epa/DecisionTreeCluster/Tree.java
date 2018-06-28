@@ -31,14 +31,27 @@ public class Tree extends TreeSet<Node> {
 			// sorting Nodes by Toxicity is done while creating this Tree
 			createTree(filename);
 			
-			// cluster nodes in a loop
-			System.out.println(this.size());
+			Node parentNode = this.first();
+			double entropyReduction = splitTree(parentNode);
+			System.out.println("Entropy reduction by split= "+entropyReduction);
 			
-			int i = 0;
-			while (this.size()>2 && i++<2) {
-				clusterNodes();
-				System.out.println(this.size());
+			entropyReduction = splitTree(parentNode.getChild1());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
+			entropyReduction = splitTree(parentNode.getChild2());
+			System.out.println("Entropy reduction by split= "+entropyReduction);
+			
+			Iterator<Node> iter = this.iterator();
+			while(iter.hasNext()) {
+				Node node = iter.next();
+				System.out.println("Toxicity = "+node.getToxicity()+", entropy = "+node.getEntropy()+", size = "+node.getRecords().size());
 			}
+			
+//			int i = 0;
+//			while (this.size()>2 && i++<2) {
+//				clusterNodes();
+//				System.out.println(this.size());
+//			}
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -53,11 +66,13 @@ public class Tree extends TreeSet<Node> {
 		
 		records = readCvsFile(filename);
 		
-		createTreeOfSingleRecordNodes(records);
+		createSingleNodeTree(records);
 		
-		stddev = getStandardDeviations(records);
-		
-		normalizeTree(stddev);
+//		createTreeOfSingleRecordNodes(records);
+//		
+//		stddev = getStandardDeviations(records);
+//		
+//		normalizeTree(stddev);
 		
 	}
 
@@ -118,9 +133,90 @@ public class Tree extends TreeSet<Node> {
 		return records;
 	}
 	
+	private void createSingleNodeTree(Vector<Property[]> records) {
+		this.add(new Node(this, null, records));
+	}
+	
+	private double splitTree(Node parentNode) throws Exception {
+		
+		int bestPropertyIndex = splitOnBestProperty(parentNode);
+		
+		Node child1 = parentNode.getChild1();
+		Node child2 = parentNode.getChild2();
+		
+		this.add(child1);
+		this.add(child2);
+		
+		double entropy0 = parentNode.getEntropy();
+		double entropy1 = child1.getEntropy();
+		double entropy2 = child2.getEntropy();
+		double avgEntropy = (child1.getRecords().size()*entropy1+child2.getRecords().size()*entropy2)/parentNode.getRecords().size();
+		
+		double entropyReduction = entropy0 - avgEntropy;
+		
+		return entropyReduction;
+	}
+	
+	private int splitOnBestProperty(Node parentNode) throws Exception {
+		double value1, value2;
+		Property[] record1, record2;
+		Node child1, child2;
+		Node child1Best, child2Best;
+		double entropy1, entropy2;
+		Vector<Property[]> recordsL = null, recordsR = null;
+		double avgEntropy, leastEntropy, parentEntropy;
+		int bestPropertyIndex = 2;
+		
+		child1Best = null;
+		child2Best = null;
+		parentEntropy = parentNode.getEntropy();
+		leastEntropy = parentEntropy;
+		Vector<Property[]> records = parentNode.getRecords();
+		record1 = records.firstElement();
+		
+		for (int j=1; j<record1.length; j++) {
+			recordsL = new Vector<Property[]>();
+			recordsR = new Vector<Property[]>();
+			if (dataTypes[j]==Double.class) {
+				value1 = (Double)record1[j].getPropWrap();
+				for (int i=0; i<records.size(); i++) {
+					record2 = records.get(i);
+					value2 = (Double)record2[j].getPropWrap();
+					if (value2<=value1) {
+						recordsL.add(record2.clone());
+					} else {
+						recordsR.add(record2.clone());
+					}
+				}
+			}
+			child1 = new Node(this, parentNode, recordsL);
+			child2 = new Node(this, parentNode, recordsR);
+			entropy1 = child1.getEntropy();
+			entropy2 = child2.getEntropy();
+			avgEntropy = (recordsL.size()*entropy1+recordsR.size()*entropy2)/records.size();
+			if (avgEntropy<leastEntropy) {
+				leastEntropy = avgEntropy;
+				child1Best = child1;
+				child2Best = child2;
+				bestPropertyIndex = j;
+			}
+
+		}
+		
+		if (leastEntropy>parentEntropy) {
+			throw new Exception("Could not decrease Entropy at all!");
+		}
+		
+		parentNode.setChild1(child1Best);
+		parentNode.setChild2(child2Best);
+		
+		return bestPropertyIndex;
+		
+	}
+	
 	private void createTreeOfSingleRecordNodes(Vector<Property[]> records) {
 		for (int i=0; i<records.size(); i++) {
-			this.add(new Node(this, this.records.get(i)));
+			this.add(new Node(this, records.get(i)));
 		}
 	}
 
